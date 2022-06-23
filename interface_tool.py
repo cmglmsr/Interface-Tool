@@ -24,7 +24,7 @@ def SSHConnect():
     client = SSHClient()
     client.load_system_host_keys()
     print("[+] Establishing connection...")
-    client.connect(hostname="20.68.195.79", username="cemg", key_filename='C:\\Users\\cemg\\Documents\\VM-cemg_key.pem')
+    client.connect(hostname="20.68.195.79", username="cemg", key_filename='C:\\Users\\cemg\\Documents\\VM-cemg_key.pem', timeout=5)
     return client
 
 def executeCommand(client):
@@ -35,11 +35,18 @@ def executeCommand(client):
 # ============================ MAIN FUNCTION =================================== #
 def __main__():
     iface = getArgs()
-    client = SSHConnect()
+    try:
+        client = SSHConnect()
+    except TimeoutError:
+        print("[-] Failed to establish connection.")
+        exit()
+    print("[+] Connected.")
     input = printMenu()
     if input == '1':
         executeCommand(client)
     client.close()
+
+
 __main__()
 
 
