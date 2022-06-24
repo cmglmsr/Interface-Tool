@@ -1,5 +1,7 @@
 import argparse
+from turtle import clear
 from paramiko import SSHClient
+
 
 def getArgs():
     parser = argparse.ArgumentParser()
@@ -13,39 +15,63 @@ def getArgs():
 def printMenu():
     print("\n\n================================================\n")
     print("  Welcome to interface tool, choose an option: \n")
-    print("================================================\n\n")
-    print("1. Connect\n2. Do stuff\n3. Do stuff")
+    print("================================================\n")
+    print("1. ifconfig\n2. Do stuff\n3. Do stuff\n\n Type 'q' to quit")
     in_1 = input(">")
     return in_1
+
+def manageMenu(client, first_input):
+    input = first_input
+    while True:
+        if input == 'q':
+            break
+        if input == '1':
+            executeCommand(client)
+        else:
+            print("[-] Invalid input.")
+        input = printMenu()
+    
 
 def SSHConnect():
     #ssh_stdin, ssh_stdout, ssh_stderr = client.exec_command("ifconfig eth0")
     #print(f'STDOUT: {ssh_stdout.read().decode("utf8")}')
     client = SSHClient()
     client.load_system_host_keys()
+    host = input("> Enter hostname: ")
+    user = input("> Enter username: ")
+    key = input("> Enter key path: ")
     print("[+] Establishing connection...")
-    client.connect(hostname="20.68.195.79", username="cemg", key_filename='C:\\Users\\cemg\\Documents\\VM-cemg_key.pem', timeout=5)
+    client.connect(hostname=host, username=user, key_filename=key, timeout=5)
     return client
 
-def executeCommand(client):
-    stdin = client.exec_command("ifconfig lo")
-    print(f'STDOUT: {stdin[1].read().decode("utf8")}')
-
-
-# ============================ MAIN FUNCTION =================================== #
-def __main__():
-    iface = getArgs()
+def trySSHConnect():
     try:
         client = SSHConnect()
     except TimeoutError:
         print("[-] Failed to establish connection.")
         exit()
     print("[+] Connected.")
-    input = printMenu()
-    if input == '1':
-        executeCommand(client)
-    client.close()
+    return client
 
+def executeCommand(client):
+    stdin = client.exec_command("ifconfig eth0")
+    print(f'STDOUT: {stdin[1].read().decode("utf8")}')
+
+
+# ============================ MAIN FUNCTION =================================== #
+def __main__():
+    #iface = getArgs()
+    client = trySSHConnect()
+
+    input = printMenu()
+    manageMenu(client, input)
+
+    print("[+] Closing interface tool, terminating connection...")
+    try:
+        client.close()
+        print("[+] Done.")
+    except:
+        print("[-] Client could not be closed.")
 
 __main__()
 
